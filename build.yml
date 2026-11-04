@@ -1,0 +1,100 @@
+name: apk
+on: [push, workflow_dispatch]
+jobs:
+  b:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: 21}
+      - run: |
+          mkdir app && cd app && mkdir www
+          cat > www/index.html <<'EOF'
+          <!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><title>Habit</title>
+          <style>
+          *{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:#0f1115;color:#e8e8ea;font:15px system-ui}
+          #tos,#app{height:100vh;display:flex;flex-direction:column}#tt{flex:1;overflow:auto;padding:14px;font-size:13px;line-height:1.5}
+          button{background:#4f8cff;color:#fff;border:0;border-radius:10px;padding:10px 14px;font:inherit;margin:4px 0}button:disabled{opacity:.4}
+          main{flex:1;overflow:auto;padding:14px}nav{display:flex}nav button{flex:1;border-radius:0;margin:0;background:#1a1d24}nav .on{background:#4f8cff}
+          .c{background:#1a1d24;border-radius:14px;padding:12px;margin-bottom:10px}.big{font-size:34px;font-weight:700}
+          #msgs div{margin:6px 0;padding:8px 10px;border-radius:12px;max-width:90%;white-space:pre-wrap}.u{background:#2c4a8a;margin-left:auto}.a{background:#262a33}
+          pre{background:#000;padding:8px;border-radius:8px;overflow:auto;margin:4px 0}.pill{background:#444;border-radius:10px;padding:1px 8px}.tag{color:#7fd}
+          .board{display:grid;gap:6px}.box{background:#11141a;border:1px solid #333;border-radius:8px;padding:8px;margin-top:4px}
+          #bud{position:fixed;left:20px;top:80px;width:56px;height:56px;transition:left 2s,top 2s,transform .3s;z-index:9;pointer-events:none}
+          .w{animation:fl .25s infinite alternate;transform-box:fill-box;transform-origin:center}@keyframes fl{to{transform:scaleY(.3)}}
+          #i{flex:1;background:#1a1d24;color:#fff;border:1px solid #333;border-radius:10px;padding:10px;font:inherit}
+          </style>
+          <div id=tos><div id=tt></div><div style="padding:10px"><label><input type=checkbox id=ck disabled> I have read and accept the Terms, Privacy Policy and License</label><br><button id=go disabled>Continue</button></div></div>
+          <div id=app hidden><main id=m></main><nav><button data-p=h class=on>Home</button><button data-p=s>Scan</button><button data-p=d>Design</button></nav></div>
+          <svg id=bud viewBox="0 0 60 60"><ellipse class=w cx=14 cy=28 rx=11 ry=6 fill=#9cf /><ellipse class=w cx=46 cy=28 rx=11 ry=6 fill=#9cf /><circle cx=30 cy=32 r=16 fill=#ffd54f /><circle cx=24 cy=29 r=2.5 fill=#222 /><circle cx=36 cy=29 r=2.5 fill=#222 /><path d="M24 38q6 5 12 0" stroke=#222 stroke-width=2 fill=none /></svg>
+          <script>
+          const $=s=>document.querySelector(s),L=localStorage,G=(k,d)=>{try{return JSON.parse(L[k])}catch{return d}},S=(k,v)=>{try{L[k]=JSON.stringify(v)}catch{}},D=()=>new Date().toDateString(),N=n=>Math.round(n).toLocaleString(),E=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),cam=o=>navigator.mediaDevices.getUserMedia(o),wt=ms=>new Promise(r=>setTimeout(r,ms));
+          let st=G('st',{}),sc=G('sc',{}),hb=G('hb',0),fc=G('fc',null),ok=G('ok',0),tk=G('tk',1e7),h=[],mh='',eng,lm=0,lt=0,m=$('#m');
+          const TX=[['TERMS OF SERVICE',['By using Habit you agree to these terms.','You must be 18 or older to use the app.','Age, gender, jawline, body type, heart rate and step figures are rough estimates for entertainment. They are not medical advice.','You use the app at your own risk.','We may change, suspend or end the service at any time.','Tokens have no cash value and may be changed, reset or removed at any time.','You may not reverse engineer, resell, copy or abuse the app or Design.','The app is provided "as is" without warranty of any kind.','To the maximum extent allowed by law we are not liable for any damages from using the app.']],
+          ['DATA COLLECTION AND SALE',['WE COLLECT YOUR DATA AND WE MAKE MONEY FROM IT. This is how the app is paid for, the same way many modern companies operate.','Data we collect: face scan results (estimated age, gender, jawline, chins, body type), steps, heart rate readings, screen time, chat and voice messages with Design, token usage, photo counts, files you send, and device information.','We may sell, rent, license or share this data, individually or in aggregate, with advertisers, data brokers and other third parties.','By accepting you consent to this collection, use and sale. If you do not agree, do not use the app.']],
+          ['PRIVACY POLICY',['Camera and microphone are used only for Design, heart rate and face scans.','Notifications are used to keep background processes alive, show screen time and deliver tips from Design.','File access is used to send files and images to Design and to count photos taken per day.','Data is stored on your device and may be copied to our servers and partners as described above.','You may delete the app at any time to remove local data.','We may update this policy at any time.']],
+          ['LICENSE AGREEMENT',['We grant you a limited, revocable, non-exclusive, non-transferable license to use the app on your personal device.','All rights, title and interest in the app, Design and its content remain with us.','You may not sublicense, modify, distribute or create derivative works of the app.','This license ends automatically if you break any term.']]];
+          $('#tt').innerHTML=TX.map(([a,b])=>'<h3>'+a+'</h3>'+b.map(x=>'<p>'+x+'</p>').join('')).join('');
+          $('#tt').onscroll=e=>{const t=e.target;if(t.scrollTop+t.clientHeight>=t.scrollHeight-8)$('#ck').disabled=false};
+          $('#ck').onchange=e=>$('#go').disabled=!e.target.checked;$('#go').onclick=()=>{S('tos',1);bt()};
+          function bt(){$('#tos').hidden=true;$('#app').hidden=false;P('h');nf()}
+          if(G('tos',0))bt();
+          document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>P(b.dataset.p));
+          async function nf(){const n=window.Capacitor?.Plugins?.LocalNotifications;if(!n)return;try{await n.requestPermissions();await n.cancel({notifications:[{id:1}]});await n.schedule({notifications:[{id:1,title:'Habit',body:'Steps today '+N(st[D()]||0)+' | in-app screen time '+Math.round((sc[D()]||0)/60)+' min',schedule:{on:{minute:0},allowWhileIdle:true}}]})}catch{}}
+          addEventListener('devicemotion',e=>{const a=e.accelerationIncludingGravity;if(!a)return;const g=Math.hypot(a.x,a.y,a.z),t=Date.now();if(g>11.5&&lm<=11.5&&t-lt>350){st[D()]=(st[D()]||0)+1;lt=t}lm=g});
+          setInterval(()=>{if(document.visibilityState=='visible')sc[D()]=(sc[D()]||0)+1},1000);setInterval(()=>{S('st',st);S('sc',sc)},5000);
+          const sp=n=>{tk=Math.max(0,tk-Math.round(n));S('tk',tk);if($('#tk'))$('#tk').textContent=N(tk)};
+          const fr=f=>'Gender: '+f.g+'<br>Jawline: '+f.jaw+'<br>Chins: '+f.ch+(f.ch>1?' (double 😄)':'')+'<br>Age guesses: '+f.ages.join(', ')+' → '+f.age+'<br>Type: '+f.type;
+          function P(p){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.p==p));
+          if(p=='h')m.innerHTML='<div class=c>Steps today<div class=big>'+N(st[D()]||0)+'</div><button onclick=tot()>Total steps</button></div><div class=c>Heart<div class=big>'+(hb||'--')+' bpm</div><button onclick=hrb(this)>Measure (finger over rear camera)</button></div><div class=c>Screen time (in app)<div class=big>'+Math.round((sc[D()]||0)/60)+' min</div></div>';
+          if(p=='s')m.innerHTML='<video id=v playsinline muted style="width:100%;border-radius:14px"></video><button onclick=scb()>Scan face</button><div id=r class=c>'+(fc?fr(fc):'No scan yet')+'</div>';
+          if(p=='d')dz()}
+          function tot(){const o=document.createElement('div');o.style='position:fixed;inset:0;background:#000e;z-index:20;padding:20px;overflow:auto';o.onclick=()=>o.remove();const e=Object.entries(st);o.innerHTML='<h2>Total: '+N(e.reduce((a,x)=>a+x[1],0))+' steps</h2>'+e.reverse().map(x=>x[0]+': '+N(x[1])).join('<br>')+'<p>tap to close</p>';document.body.append(o)}
+          async function hr(){const s=await cam({video:{facingMode:'environment'}}),k=s.getVideoTracks()[0];try{await k.applyConstraints({advanced:[{torch:true}]})}catch{}const v=document.createElement('video');v.srcObject=s;v.muted=true;await v.play();const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d',{willReadFrequently:true}),a=[],t0=performance.now();
+          await new Promise(r=>{(function f(){x.drawImage(v,0,0,16,16);const d=x.getImageData(0,0,16,16).data;let q=0;for(let i=0;i<d.length;i+=4)q+=d[i];a.push([performance.now(),q]);performance.now()-t0<12000?requestAnimationFrame(f):r()})()});
+          s.getTracks().forEach(z=>z.stop());const e=a.map((p,i)=>{let u=0,n=0;for(let j=Math.max(0,i-7);j<=Math.min(a.length-1,i+7);j++){u+=a[j][1];n++}return p[1]-u/n});let n=0,l=0;for(let i=1;i<e.length-1;i++)if(e[i]>0&&e[i]>e[i-1]&&e[i]>=e[i+1]&&a[i][0]-l>300){n++;l=a[i][0]}
+          const b=Math.round(n*60000/(a[a.length-1][0]-a[0][0]));return b>35&&b<200?b:0}
+          async function hrb(b){try{b.textContent='Measuring 12s...';hb=await hr();S('hb',hb)}catch{alert('Camera needed')}P('h')}
+          async function fa(){if(!window.faceapi)await new Promise((r,j)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.js';s.onload=r;s.onerror=j;document.head.appendChild(s)});if(fa.r)return;const u='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model/';await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(u),faceapi.nets.faceLandmark68Net.loadFromUri(u),faceapi.nets.ageGenderNet.loadFromUri(u)]);fa.r=1}
+          async function scan(v){await fa();const o=new faceapi.TinyFaceDetectorOptions({inputSize:320}),ag=[];let f;for(let i=0;i<3;i++){const d=await faceapi.detectSingleFace(v,o).withFaceLandmarks().withAgeAndGender();if(d){ag.push(d.age);f=d}await wt(400)}
+          if(!f)return null;const p=f.landmarks.positions,Q=(a,b)=>Math.hypot(p[a].x-p[b].x,p[a].y-p[b].y),r=Q(0,16)/Q(27,8),A=[p[5].x-p[8].x,p[5].y-p[8].y],B=[p[11].x-p[8].x,p[11].y-p[8].y],ang=Math.acos((A[0]*B[0]+A[1]*B[1])/(Math.hypot(...A)*Math.hypot(...B)))*180/Math.PI;
+          const t=r<1.2?'too skinny':r<1.32?'skinny':r<1.6?(r>1.4&&ang<100?'strong':'regular'):r<1.72?'fat':'too fat';
+          return{g:f.gender,ages:ag.map(Math.round),age:Math.round(ag.reduce((a,b)=>a+b,0)/ag.length),jaw:ang<100?'sharp':ang<115?'defined':'soft',ch:r>1.62?2:1,type:t}}
+          async function ls(){const v=document.createElement('video');v.muted=true;v.playsInline=true;const s=await cam({video:{facingMode:'user'}});v.srcObject=s;await v.play();let f;try{f=await scan(v)}finally{s.getTracks().forEach(k=>k.stop())}if(f){fc=f;S('fc',f)}return f}
+          async function scb(){$('#r').textContent='Scanning...';try{const v=$('#v'),s=await cam({video:{facingMode:'user'}});v.srcObject=s;await v.play();const f=await scan(v);s.getTracks().forEach(k=>k.stop());if(f){fc=f;S('fc',f)}$('#r').innerHTML=f?fr(f):'No face found'}catch(e){$('#r').textContent='Camera or model error'}}
+          function dz(){if(!ok){m.innerHTML='<div class=c>🔒 Design is locked.<br>Allow camera and microphone to unlock.<br><button onclick=unl()>Unlock Design</button></div>';return}
+          m.innerHTML='<div id=ld style="font-size:11px;color:#888"></div><div>Tokens: <b id=tk>'+N(tk)+'</b></div><div id=msgs>'+mh+'</div><div style="display:flex;gap:6px;position:sticky;bottom:0"><input id=i type=text placeholder="Talk to Design"><button onclick=$("#f").click()>📎</button><button onclick=mic()>🎤</button><button onclick=sd()>➤</button></div><input id=f type=file accept="text/*" hidden>';
+          $('#i').onkeydown=e=>{if(e.key=='Enter')sd()};$('#f').onchange=async e=>{const f=e.target.files[0];if(f)snd('[file '+f.name+']\n'+(await f.text()).slice(0,2000))}}
+          async function unl(){try{(await cam({video:true,audio:true})).getTracks().forEach(k=>k.stop());ok=1;S('ok',1);P('d')}catch{alert('Camera and microphone are required')}}
+          function md(s){const b=[],k=x=>'\x01'+(b.push(x)-1)+'\x01';
+          s=s.replace(/<data>[\s\S]*?<\/data>/g,x=>{const d=new DOMParser().parseFromString('<r>'+x+'</r>','text/xml');if(d.querySelector('parsererror'))return x;return k('<div class=board>'+[...d.querySelectorAll('data')].map(a=>'<div class=c><b>'+E(a.querySelector('title')?.textContent||'')+'</b>'+[...a.querySelectorAll('body')].map(y=>'<div class=box>'+[...y.querySelectorAll('text')].map(t=>'<div>'+E(t.textContent)+'</div>').join('')+'</div>').join('')+'</div>').join('')+'</div>')});
+          s=s.replace(/'''([\s\S]*?)'''/g,(_,x)=>k('<pre>'+E(x.trim())+'</pre>'));
+          s=E(s).replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,(_,t,u)=>k('<a href="'+u+'" target=_blank>'+t+'</a>')).replace(/\*\*\*([^*]+)\*\*\*/g,'<b><i>$1</i></b>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\*([^*]+)\*/g,'<i>$1</i>').replace(/__([^_]+)__/g,'<u>$1</u>').replace(/#([^#\n]+)#/g,'<span class=tag>#$1</span>').replace(/\|([^|\n]+)\|/g,'<span class=pill>$1</span>');
+          return s.replace(/\x01(\d+)\x01/g,(_,i)=>b[i])}
+          const add=(c,t)=>{mh+='<div class='+c+'>'+(c=='a'?md(t):E(t))+'</div>';if($('#msgs'))$('#msgs').innerHTML=mh};
+          const cc=r=>{let c=r.length*3;(r.match(/'''[\s\S]*?'''/g)||[]).forEach(x=>c+=x.length+20*x.split('\n').length);return c};
+          const say=t=>{try{speechSynthesis.speak(new SpeechSynthesisUtterance(t.replace(/<[^>]*>|[*_#|'\[\]]/g,'')))}catch{}};
+          const mic=()=>{const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R)return alert('Voice not supported on this device');const r=new R();r.onresult=e=>snd(e.results[0][0].transcript);r.start()};
+          const sd=()=>{const t=$('#i').value.trim();if(!t)return;$('#i').value='';snd(t)};
+          const SYS=()=>"You are Design, a tiny cheerful flying buddy in a habit tracker. Short, friendly answers. Never mention models or tokens. To use a tool reply ONLY with [[get-face]], [[get-analysis]], [[get-stats]] or [[search:query]] and the result comes back. Markdown allowed: **bold** *italic* ***both*** __underline__ [text](url) #tag# |pill| '''code''' and <data><title>T</title><body><text>x</text></body></data> for boards. Avoid writing code, it is costly. Today: steps "+(st[D()]||0)+", heart "+hb+" bpm, screen "+Math.round((sc[D()]||0)/60)+" min, last scan "+JSON.stringify(fc)+".";
+          async function srch(q){try{const r=await(await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(q))).json();return r.extract||'nothing found'}catch{return 'search failed'}}
+          async function tool(n,q){const t=performance.now();let o,k=220;try{if(n=='get-face'){k=20;o=JSON.stringify(await ls())}else if(n=='get-analysis'){k=100;const f=await ls();o=f?f.type+', jaw '+f.jaw+', chins '+f.ch:'no face'}else if(n=='get-stats'){k=0;o=JSON.stringify({steps:st[D()]||0,heart:hb,screen:Math.round((sc[D()]||0)/60),scan:fc})}else if(n=='search')o=await srch(q||'');else o='unknown tool'}catch{o='tool failed'}const ms=performance.now()-t;sp(Math.ceil(ms/50)+k*ms/1000);return o}
+          async function ai(x){try{if(eng===undefined){const w=await import('https://esm.run/@mlc-ai/web-llm');eng=await w.CreateMLCEngine('Qwen2.5-1.5B-Instruct-q4f16_1-MLC',{initProgressCallback:p=>$('#ld')&&($('#ld').textContent=p.text)});$('#ld')&&($('#ld').textContent='')}if(eng)return(await eng.chat.completions.create({messages:x,max_tokens:400})).choices[0].message.content}catch(e){eng=null}
+          return "Bzzt! My brain can't wake up on this phone right now 🫧 Steps today: "+(st[D()]||0)}
+          const B=$('#bud');setInterval(()=>{B.style.left=Math.random()*(innerWidth-60)+'px';B.style.top=Math.random()*(innerHeight-130)+'px'},2200);
+          async function snd(t){if(tk<=0){add('a','Out of tokens.');return}add('u',t);sp(t.length*3);h.push({role:'user',content:t});B.style.transform='scale(1.5)';let r='';
+          for(let i=0;i<3;i++){r=await ai([{role:'system',content:SYS()},...h.slice(-12)]);const x=r.match(/\[\[([\w-]+)(?::([^\]]*))?\]\]/);if(!x)break;h.push({role:'assistant',content:r});h.push({role:'user',content:'TOOL RESULT: '+await tool(x[1],x[2])})}
+          r=r.replace(/\[\[.*?\]\]/g,'').trim();sp(cc(r));h.push({role:'assistant',content:r});add('a',r);say(r);B.style.transform='scale(1)';const n=window.Capacitor?.Plugins?.LocalNotifications;if(n&&/tip/i.test(r))n.schedule({notifications:[{id:2,title:'Design',body:r.slice(0,120),schedule:{at:new Date(Date.now()+5000)}}]}).catch(()=>{})}
+          </script>
+          EOF
+          npm init -y
+          npm i @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/local-notifications@7
+          npx cap init Habit com.habit.app --web-dir www
+          npx cap add android
+          npx cap sync android
+          P=""; for x in CAMERA RECORD_AUDIO MODIFY_AUDIO_SETTINGS POST_NOTIFICATIONS ACTIVITY_RECOGNITION MANAGE_EXTERNAL_STORAGE READ_MEDIA_IMAGES WAKE_LOCK FOREGROUND_SERVICE; do P="$P<uses-permission android:name=\"android.permission.$x\"/>"; done
+          sed -i "s#<application#$P<application#" android/app/src/main/AndroidManifest.xml
+          cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with: {name: habit-apk, path: app/android/app/build/outputs/apk/debug/app-debug.apk}
